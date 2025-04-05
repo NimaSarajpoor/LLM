@@ -91,6 +91,9 @@ class TokenTransform:
             A dictionary where each key is a unique token (e.g. word),
             and its corresponding value is a numerical value known as token id.
 
+        regex_tokenizer : str
+            A regex pattern that is used for splitting text during the tokenization process
+
         Returns
         -------
         None
@@ -114,4 +117,58 @@ class TokenTransform:
         # let's assume `self.int2str` contains all the keys
         text = " ".join(self.int2str[i] for i in token_ids)
         return text
+
+
+class TokenTransformV2:
+    def __init__(self, vocabulary, regex_tokenizer):
+        """
+        Instanciate an object from this class
+
+        Parameters
+        ----------
+        vocabulary : dict
+            A dictionary where each key is a unique token (e.g. word),
+            and its corresponding value is a numerical value known as token id.
+
+        regex_tokenizer : str
+            A regex pattern that is used for splitting text during the tokenization process
+
+        Returns
+        -------
+        None
+        """
+        self.UNKNOWN_KEYWORD = "<|unk|>"
+        self.END_OF_TEXT = "<|endoftext|>" 
+        self.regex_tokenizer = regex_tokenizer
         
+        lst = list(vocabulary.keys())
+        if self.UNKNOWN_KEYWORD not in lst:
+            lst.append(self.UNKNOWN_KEYWORD)
+
+        if self.END_OF_TEXT not in lst:
+            lst.append(self.END_OF_TEXT)
+        
+        vocabulary = {
+            s:i for (i, s) in enumerate(sorted(set(lst)))
+        }
+        self.str2int = vocabulary
+        self.int2str = {token_id : token for (token, token_id) in vocabulary.items()}
+
+    
+    def encode(self, text):
+        tokens = tokenizer(text, self.regex_tokenizer)
+
+        # let's assume `self.str2int` contains all the keys
+
+        uknown_id = self.str2int[self.UNKNOWN_KEYWORD]
+        token_ids = [
+            self.str2int.get(t, uknown_id) for t in tokens
+        ]
+        
+        return token_ids
+
+
+    def decode(self, token_ids):
+        # let's assume `self.int2str` contains all the keys
+        text = " ".join(self.int2str[i] for i in token_ids)
+        return text
